@@ -1,4 +1,4 @@
-package com.fullfud.randomlootchest.tasks;
+\package com.fullfud.randomlootchest.tasks;
 
 import com.fullfud.randomlootchest.RandomLootChest;
 import com.fullfud.randomlootchest.managers.ChestManager;
@@ -8,12 +8,14 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Chest;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class LootRespawnTask implements Runnable {
 
@@ -21,7 +23,7 @@ public class LootRespawnTask implements Runnable {
     private final ChestManager chestManager;
     private final TemplateManager templateManager;
     private final Random random = new Random();
-    private static final int PLAYER_CHECK_RADIUS = 50;
+    private static final double PLAYER_CHECK_RADIUS = 50.0;
 
     public LootRespawnTask(RandomLootChest plugin) {
         this.plugin = plugin;
@@ -42,14 +44,19 @@ public class LootRespawnTask implements Runnable {
             if (timeSinceLastRespawn >= intervalMillis) {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     if (loc.getWorld() == null || !loc.isWorldLoaded()) return;
-                    
-                    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-                    // БЫЛО: if (!loc.getWorld().getNearbyPlayers(loc, PLAYER_CHECK_RADIUS).isEmpty()) {
-                    // СТАЛО:
-                    if (!loc.getNearbyPlayers(PLAYER_CHECK_RADIUS).isEmpty()) {
+
+                    // --- НАДЕЖНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+                    // Получаем всех существ в радиусе и проверяем, есть ли среди них игроки.
+                    // Этот метод гарантированно работает на Spigot и Paper.
+                    boolean playersNearby = loc.getWorld()
+                            .getNearbyEntities(loc, PLAYER_CHECK_RADIUS, PLAYER_CHECK_RADIUS, PLAYER_CHECK_RADIUS)
+                            .stream()
+                            .anyMatch(entity -> entity instanceof Player);
+
+                    if (playersNearby) {
                         return;
                     }
-                    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+                    // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
 
                     if (loc.getBlock().getType() != Material.CHEST) {
                         return;
@@ -64,7 +71,7 @@ public class LootRespawnTask implements Runnable {
         }
         Bukkit.getScheduler().runTaskAsynchronously(plugin, chestManager::saveChests);
     }
-    
+
     private void fillChest(Location loc, String templateName) {
         Map<ItemStack, Double> template = templateManager.getTemplate(templateName);
         if (template == null) return;
