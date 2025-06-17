@@ -63,10 +63,10 @@ public class LootCommand implements CommandExecutor, TabCompleter {
 
     private void handleCreate(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "Usage: /loot create <templateName>");
+            player.sendMessage(ChatColor.RED + "Usage: /loot create <template name>");
             return;
         }
-        String templateName = args[1];
+        String templateName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         if (plugin.getTemplateManager().getTemplate(templateName) != null) {
             player.sendMessage(ChatColor.RED + "A template with this name already exists.");
             return;
@@ -78,10 +78,10 @@ public class LootCommand implements CommandExecutor, TabCompleter {
 
     private void handleApply(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "Usage: /loot apply <templateName>");
+            player.sendMessage(ChatColor.RED + "Usage: /loot apply <template name>");
             return;
         }
-        String templateName = args[1];
+        String templateName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         Map<ItemStack, Double> template = plugin.getTemplateManager().getTemplate(templateName);
         if (template == null) {
             player.sendMessage(ChatColor.RED + "Template '" + templateName + "' not found.");
@@ -107,7 +107,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
     
     private void handleLink(Player player, String[] args) {
         if (args.length < 3) {
-            player.sendMessage(ChatColor.RED + "Usage: /loot link <templateName> <timeInSeconds>");
+            player.sendMessage(ChatColor.RED + "Usage: /loot link <template name> <timeInSeconds>");
             return;
         }
         Block targetBlock = player.getTargetBlock(null, 5);
@@ -115,18 +115,29 @@ public class LootCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(ChatColor.RED + "You must be looking at a chest.");
             return;
         }
-        String templateName = args[1];
+        
+        String timeArg = args[args.length - 1];
+        long interval;
+        try {
+            interval = Long.parseLong(timeArg);
+        } catch (NumberFormatException e) {
+            player.sendMessage(ChatColor.RED + "Invalid time provided. It must be a number at the end of the command.");
+            return;
+        }
+
+        String templateName = String.join(" ", Arrays.copyOfRange(args, 1, args.length - 1));
         if (plugin.getTemplateManager().getTemplate(templateName) == null) {
             player.sendMessage(ChatColor.RED + "Template '" + templateName + "' not found.");
             return;
         }
-        try {
-            long interval = Long.parseLong(args[2]);
-            plugin.getChestManager().addChest(targetBlock.getLocation(), templateName, interval);
-            player.sendMessage(ChatColor.GREEN + "Chest linked to template '" + templateName + "' with a respawn time of " + interval + " seconds.");
-        } catch (NumberFormatException e) {
-            player.sendMessage(ChatColor.RED + "Invalid time. Please enter a number in seconds.");
+
+        if (interval < 60) {
+            player.sendMessage(ChatColor.RED + "Время возрождения не может быть меньше 60 секунд.");
+            return;
         }
+
+        plugin.getChestManager().addChest(targetBlock.getLocation(), templateName, interval);
+        player.sendMessage(ChatColor.GREEN + "Chest linked to template '" + templateName + "' with a respawn time of " + interval + " seconds.");
     }
 
     private void handleUnlink(Player player) {
@@ -144,10 +155,12 @@ public class LootCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             return StringUtil.copyPartialMatches(args[0], Arrays.asList("create", "apply", "list", "link", "unlink"), new ArrayList<>());
         }
-        if (args.length == 2) {
+        if (args.length >= 2) {
             String subCommand = args[0].toLowerCase();
             if (subCommand.equals("apply") || subCommand.equals("link")) {
-                return StringUtil.copyPartialMatches(args[1], plugin.getTemplateManager().getTemplateNames(), new ArrayList<>());
+                // Autocomplete for template names is now more complex with spaces,
+                // so we will just offer the list of templates without partial matching.
+                return new ArrayList<>(plugin.getTemplateManager().getTemplateNames());
             }
         }
         return Collections.emptyList();
