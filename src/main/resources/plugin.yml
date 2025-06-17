@@ -1,0 +1,11 @@
+name: RandomLootChest
+version: 1.0
+main: com.fullfud.randomlootchest.RandomLootChest
+api-version: 1.18
+author: YourName
+description: Creates loot templates and fills chests with random loot.
+commands:
+  loot:
+    description: Main command for the RandomLootChest plugin.
+    aliases: [rlc]
+    usage: /<command> [create|apply|list]
