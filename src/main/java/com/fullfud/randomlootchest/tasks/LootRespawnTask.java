@@ -1,4 +1,4 @@
-\package com.fullfud.randomlootchest.tasks;
+package com.fullfud.randomlootchest.tasks;
 
 import com.fullfud.randomlootchest.RandomLootChest;
 import com.fullfud.randomlootchest.managers.ChestManager;
