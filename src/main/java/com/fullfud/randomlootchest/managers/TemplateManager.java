@@ -45,7 +45,7 @@ public class TemplateManager {
 
         try {
             config.save(configFile);
-            templates.put(name, items);
+            templates.put(name.toLowerCase(), items);
         } catch (IOException e) {
             plugin.getLogger().severe("Could not save template to file: " + e.getMessage());
         }
@@ -72,9 +72,9 @@ public class TemplateManager {
     }
 
     public Map<ItemStack, Double> getTemplate(String name) {
-        return templates.get(name);
+        return templates.get(name.toLowerCase());
     }
-    
+
     public Set<String> getTemplateNames() {
         return templates.keySet();
     }
