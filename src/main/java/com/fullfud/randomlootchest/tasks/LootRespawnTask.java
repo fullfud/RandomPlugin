@@ -42,9 +42,15 @@ public class LootRespawnTask implements Runnable {
             if (timeSinceLastRespawn >= intervalMillis) {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     if (loc.getWorld() == null || !loc.isWorldLoaded()) return;
-                    if (!loc.getWorld().getNearbyPlayers(loc, PLAYER_CHECK_RADIUS).isEmpty()) {
+                    
+                    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+                    // БЫЛО: if (!loc.getWorld().getNearbyPlayers(loc, PLAYER_CHECK_RADIUS).isEmpty()) {
+                    // СТАЛО:
+                    if (!loc.getNearbyPlayers(PLAYER_CHECK_RADIUS).isEmpty()) {
                         return;
                     }
+                    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
                     if (loc.getBlock().getType() != Material.CHEST) {
                         return;
                     }
