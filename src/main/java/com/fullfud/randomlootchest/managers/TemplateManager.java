@@ -28,6 +28,7 @@ public class TemplateManager {
             plugin.saveResource("templates.yml", false);
         }
         config = YamlConfiguration.loadConfiguration(configFile);
+        loadTemplates();
     }
 
     public void saveTemplate(String name, Map<ItemStack, Double> items) {
@@ -52,6 +53,7 @@ public class TemplateManager {
     }
 
     public void loadTemplates() {
+        templates.clear();
         if (!config.isConfigurationSection("templates")) {
             return;
         }
@@ -66,7 +68,7 @@ public class TemplateManager {
                     itemsWithChances.put(item, chance);
                 }
             }
-            templates.put(name, itemsWithChances);
+            templates.put(name.toLowerCase(), itemsWithChances);
         }
         plugin.getLogger().info("Loaded " + templates.size() + " loot templates.");
     }

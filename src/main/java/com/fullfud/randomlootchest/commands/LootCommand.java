@@ -1,6 +1,7 @@
 package com.fullfud.randomlootchest.commands;
 
 import com.fullfud.randomlootchest.RandomLootChest;
+import com.fullfud.randomlootchest.utils.LootFiller;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -20,7 +21,6 @@ import java.util.*;
 public class LootCommand implements CommandExecutor, TabCompleter {
 
     private final RandomLootChest plugin;
-    private final Random random = new Random();
 
     public LootCommand(RandomLootChest plugin) {
         this.plugin = plugin;
@@ -93,14 +93,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
             return;
         }
         Chest chest = (Chest) targetBlock.getState();
-        Inventory chestInventory = chest.getBlockInventory();
-        chestInventory.clear();
-        for (Map.Entry<ItemStack, Double> entry : template.entrySet()) {
-            if (random.nextDouble() * 100 < entry.getValue()) {
-                int slot = random.nextInt(chestInventory.getSize());
-                chestInventory.setItem(slot, entry.getKey().clone());
-            }
-        }
+        LootFiller.fillChest(chest, template);
         player.getWorld().spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, targetBlock.getLocation().add(0.5, 1, 0.5), 30);
         player.sendMessage(ChatColor.GREEN + "Loot from template '" + templateName + "' has been applied to the chest!");
     }

@@ -21,7 +21,6 @@ public class ChestManager {
     public ChestManager(RandomLootChest plugin) {
         this.plugin = plugin;
         setupConfig();
-        loadChests();
     }
 
     private void setupConfig() {
@@ -34,6 +33,7 @@ public class ChestManager {
             }
         }
         config = YamlConfiguration.loadConfiguration(configFile);
+        loadChests();
     }
 
     public void loadChests() {
