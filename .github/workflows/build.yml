@@ -1,0 +1,56 @@
+# .github/workflows/build.yml
+
+# Имя воркфлоу, которое будет отображаться в GitHub
+name: Build Plugin with Gradle
+
+# Триггеры для запуска
+on:
+  push:
+    branches: [ "main" ] # При пуше в ветку main
+  pull_request:
+    branches: [ "main" ] # При создании пулл-реквеста в main
+
+jobs:
+  build:
+    # Запускаем на последней версии Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Загружаем код из репозитория
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Устанавливаем Java 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Кэшируем зависимости Gradle для ускорения будущих сборок
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 4. Даем права на исполнение скрипту gradlew (важно для Linux)
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      # 5. Собираем проект командой через Gradle Wrapper
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      # 6. Загружаем готовый .jar файл как артефакт
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # Имя артефакта, который можно будет скачать
+          name: RandomLootChest-Plugin
+          # Путь к файлу. Gradle по умолчанию кладет его сюда:
+          path: build/libs/*.jar
