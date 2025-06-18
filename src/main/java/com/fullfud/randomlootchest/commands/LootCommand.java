@@ -132,7 +132,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
         }
 
         if (interval < 60) {
-            player.sendMessage(ChatColor.RED + "Время возрождения не может быть меньше 60 секунд.");
+            player.sendMessage(ChatColor.RED + "Respawn time cannot be less than 60 seconds.");
             return;
         }
 
