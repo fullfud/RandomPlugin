@@ -43,11 +43,36 @@ public class ChestManager {
         }
         ConfigurationSection chestsSection = config.getConfigurationSection("chests");
         for (String key : chestsSection.getKeys(false)) {
-            Location loc = chestsSection.getSerializable(key, Location.class);
-            if (loc == null) continue;
+            Location loc = null;
+
+            try {
+                if (chestsSection.contains(key + ".location")) {
+                    loc = (Location) chestsSection.get(key + ".location");
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning("Error loading new format for chest " + key);
+            }
+
+            if (loc == null) {
+                try {
+                    Object rawObj = chestsSection.get(key);
+                    if (rawObj instanceof Location) {
+                        loc = (Location) rawObj;
+                    }
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Error loading old format for chest " + key);
+                }
+            }
+
+            if (loc == null) {
+                plugin.getLogger().warning("Skipping invalid chest entry at index: " + key + " (Location missing)");
+                continue;
+            }
+
             String templateName = chestsSection.getString(key + ".template");
             long interval = chestsSection.getLong(key + ".interval");
             long lastRespawn = chestsSection.getLong(key + ".last-respawn", 0);
+
             chestDataMap.put(loc, new ChestData(templateName, interval, lastRespawn));
         }
         plugin.getLogger().info("Loaded " + chestDataMap.size() + " auto-respawning chests.");
@@ -58,10 +83,12 @@ public class ChestManager {
         int index = 0;
         for (Map.Entry<Location, ChestData> entry : chestDataMap.entrySet()) {
             String path = "chests." + index;
-            config.set(path, entry.getKey());
+
+            config.set(path + ".location", entry.getKey());
             config.set(path + ".template", entry.getValue().getTemplateName());
             config.set(path + ".interval", entry.getValue().getInterval());
             config.set(path + ".last-respawn", entry.getValue().getLastRespawn());
+
             index++;
         }
         try {
