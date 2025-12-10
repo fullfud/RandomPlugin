@@ -1,5 +1,5 @@
 name: RandomLootChest
-version: 1.1-FINAL
+version: 1.2-FINAL
 main: com.fullfud.randomlootchest.RandomLootChest
 api-version: 1.18
 author: fullfud
@@ -8,4 +8,4 @@ commands:
   loot:
     description: Main command for the RandomLootChest plugin.
     aliases: [rlc]
-    usage: /<command> [create|apply|list|link|unlink]
+    usage: /<command> [create|edit|apply|list|link|unlink]

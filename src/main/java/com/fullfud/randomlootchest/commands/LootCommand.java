@@ -34,13 +34,16 @@ public class LootCommand implements CommandExecutor, TabCompleter {
         }
         Player player = (Player) sender;
         if (args.length == 0) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /loot <create|apply|list|link|unlink>");
+            player.sendMessage(ChatColor.YELLOW + "Usage: /loot <create|edit|apply|list|link|unlink>");
             return true;
         }
         String subCommand = args[0].toLowerCase();
         switch (subCommand) {
             case "create":
                 handleCreate(player, args);
+                break;
+            case "edit":
+                handleEdit(player, args);
                 break;
             case "apply":
                 handleApply(player, args);
@@ -55,7 +58,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
                 handleUnlink(player);
                 break;
             default:
-                player.sendMessage(ChatColor.YELLOW + "Usage: /loot <create|apply|list|link|unlink>");
+                player.sendMessage(ChatColor.YELLOW + "Usage: /loot <create|edit|apply|list|link|unlink>");
                 break;
         }
         return true;
@@ -68,12 +71,34 @@ public class LootCommand implements CommandExecutor, TabCompleter {
         }
         String templateName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         if (plugin.getTemplateManager().getTemplate(templateName) != null) {
-            player.sendMessage(ChatColor.RED + "A template with this name already exists.");
+            player.sendMessage(ChatColor.RED + "A template with this name already exists. Use '/loot edit " + templateName + "' to change it.");
             return;
         }
         Inventory gui = Bukkit.createInventory(player, 27, "Loot Template: " + templateName);
         player.openInventory(gui);
-        player.sendMessage(ChatColor.GREEN + "Place items in the chest to create the template '" + templateName + "'. Close inventory when done.");
+        player.sendMessage(ChatColor.GREEN + "Place items in the chest. Close to save.");
+    }
+
+    private void handleEdit(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage(ChatColor.RED + "Usage: /loot edit <template name>");
+            return;
+        }
+        String templateName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        Map<ItemStack, Double> existingTemplate = plugin.getTemplateManager().getTemplate(templateName);
+
+        if (existingTemplate == null) {
+            player.sendMessage(ChatColor.RED + "Template '" + templateName + "' does not exist.");
+            return;
+        }
+
+        Inventory gui = Bukkit.createInventory(player, 27, "Loot Template: " + templateName);
+        for (ItemStack item : existingTemplate.keySet()) {
+            gui.addItem(item.clone());
+        }
+
+        player.openInventory(gui);
+        player.sendMessage(ChatColor.GOLD + "Editing mode. Modify items and close to set new chances.");
     }
 
     private void handleApply(Player player, String[] args) {
@@ -95,7 +120,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
         Chest chest = (Chest) targetBlock.getState();
         LootFiller.fillChest(chest, template);
         player.getWorld().spawnParticle(org.bukkit.Particle.VILLAGER_HAPPY, targetBlock.getLocation().add(0.5, 1, 0.5), 30);
-        player.sendMessage(ChatColor.GREEN + "Loot from template '" + templateName + "' has been applied to the chest!");
+        player.sendMessage(ChatColor.GREEN + "Loot applied!");
     }
 
     private void handleList(Player player) {
@@ -104,7 +129,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(ChatColor.GREEN + "- " + name);
         }
     }
-    
+
     private void handleLink(Player player, String[] args) {
         if (args.length < 3) {
             player.sendMessage(ChatColor.RED + "Usage: /loot link <template name> <timeInSeconds>");
@@ -115,13 +140,13 @@ public class LootCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(ChatColor.RED + "You must be looking at a chest.");
             return;
         }
-        
+
         String timeArg = args[args.length - 1];
         long interval;
         try {
             interval = Long.parseLong(timeArg);
         } catch (NumberFormatException e) {
-            player.sendMessage(ChatColor.RED + "Invalid time provided. It must be a number at the end of the command.");
+            player.sendMessage(ChatColor.RED + "Invalid time provided.");
             return;
         }
 
@@ -137,7 +162,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
         }
 
         plugin.getChestManager().addChest(targetBlock.getLocation(), templateName, interval);
-        player.sendMessage(ChatColor.GREEN + "Chest linked to template '" + templateName + "' with a respawn time of " + interval + " seconds.");
+        player.sendMessage(ChatColor.GREEN + "Chest linked to '" + templateName + "' (every " + interval + "s).");
     }
 
     private void handleUnlink(Player player) {
@@ -147,19 +172,17 @@ public class LootCommand implements CommandExecutor, TabCompleter {
             return;
         }
         plugin.getChestManager().removeChest(targetBlock.getLocation());
-        player.sendMessage(ChatColor.GREEN + "Chest unlinked from the auto-respawn system.");
+        player.sendMessage(ChatColor.GREEN + "Chest unlinked.");
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return StringUtil.copyPartialMatches(args[0], Arrays.asList("create", "apply", "list", "link", "unlink"), new ArrayList<>());
+            return StringUtil.copyPartialMatches(args[0], Arrays.asList("create", "edit", "apply", "list", "link", "unlink"), new ArrayList<>());
         }
         if (args.length >= 2) {
             String subCommand = args[0].toLowerCase();
-            if (subCommand.equals("apply") || subCommand.equals("link")) {
-                // Autocomplete for template names is now more complex with spaces,
-                // so we will just offer the list of templates without partial matching.
+            if (subCommand.equals("apply") || subCommand.equals("link") || subCommand.equals("edit")) {
                 return new ArrayList<>(plugin.getTemplateManager().getTemplateNames());
             }
         }

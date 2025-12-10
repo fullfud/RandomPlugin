@@ -19,7 +19,6 @@ public class LootRespawnTask implements Runnable {
     private final RandomLootChest plugin;
     private final ChestManager chestManager;
     private final TemplateManager templateManager;
-    private static final double PLAYER_CHECK_RADIUS = 50.0;
 
     public LootRespawnTask(RandomLootChest plugin) {
         this.plugin = plugin;
@@ -29,7 +28,9 @@ public class LootRespawnTask implements Runnable {
 
     @Override
     public void run() {
+        double checkRadius = plugin.getConfig().getDouble("player-check-radius", 50.0);
         long currentTime = System.currentTimeMillis();
+
         for (Map.Entry<Location, ChestManager.ChestData> entry : chestManager.getChestDataMap().entrySet()) {
             Location loc = entry.getKey();
             ChestManager.ChestData data = entry.getValue();
@@ -42,7 +43,7 @@ public class LootRespawnTask implements Runnable {
                     if (loc.getWorld() == null || !loc.isWorldLoaded()) return;
 
                     boolean playersNearby = loc.getWorld()
-                            .getNearbyEntities(loc, PLAYER_CHECK_RADIUS, PLAYER_CHECK_RADIUS, PLAYER_CHECK_RADIUS)
+                            .getNearbyEntities(loc, checkRadius, checkRadius, checkRadius)
                             .stream()
                             .anyMatch(entity -> entity instanceof Player);
 
@@ -53,7 +54,7 @@ public class LootRespawnTask implements Runnable {
                     if (loc.getBlock().getType() != Material.CHEST) {
                         return;
                     }
-                    
+
                     Chest chest = (Chest) loc.getBlock().getState();
                     LootFiller.fillChest(chest, templateManager.getTemplate(data.getTemplateName()));
                     data.setLastRespawn(System.currentTimeMillis());

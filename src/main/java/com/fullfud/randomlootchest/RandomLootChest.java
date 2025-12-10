@@ -24,6 +24,8 @@ public final class RandomLootChest extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+
         this.templateManager = new TemplateManager(this);
         this.chestManager = new ChestManager(this);
 

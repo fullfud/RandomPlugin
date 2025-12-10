@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.fullfud.randomlootchest"
-version = "1.0-FINAL"
+version = "1.2-FINAL"
 
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 
